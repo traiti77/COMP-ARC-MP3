@@ -27,6 +27,10 @@ module top(
     logic load_sreg;
     logic transmit_pixel;
 
+    ///////////////TEST
+    logic [4:0] frame;
+    logic [4:0] last_frame;
+
 //define starting pattern in hex, 64 bit (easy to convert to binary for grid display)
     localparam logic [63:0] GLIDER = 64'h4020E00000000000;
 
@@ -38,7 +42,7 @@ module top(
 
 //assign
     assign initial_pattern = GLIDER;
-    assign reset = SW;
+    assign reset = ~SW;
 
 // instances //
 // instance rules
@@ -65,8 +69,17 @@ module top(
         .load_sreg      (load_sreg), 
         .transmit_pixel (transmit_pixel), 
         .pixel          (pixel), 
-        .game_step      (step_game)
+        .frame          (frame)
     );
+
+    /////////////////////////////////////TEST
+
+    // Detect frame change to step game
+    always_ff @(posedge clk) begin
+        last_frame <= frame;
+    end
+    assign step_game = (frame != last_frame); //change with frame
+
 
 // Shift Reg pixel color depending on state
     always_ff @(posedge clk) begin
@@ -81,5 +94,7 @@ module top(
     end
 
     assign _48b = ws2812b_out;
+
+    assign LED = frame[0];
 
 endmodule
